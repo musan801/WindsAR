@@ -1,1 +1,1 @@
-# WindsAR
+# WindsAR Django backend setup
