@@ -4,7 +4,7 @@ from django.db import transaction
 
 from django.contrib.auth.models import User
 # Create your views here.
-from .models import RegisterCustomer
+from .models import Customer
 from rest_framework.response import Response
 from rest_framework import generics
 from django.contrib.auth import authenticate
@@ -28,9 +28,9 @@ class RegisterCustomerView(generics.GenericAPIView):
                     username, email, password,
                 )
                 
-                # user = authenticate(email=email, password=password)
+ 
 
-                customer = RegisterCustomer()
+                customer = Customer()
                 customer.user_id = user.id
                 customer.name = name
                 customer.dob = dob
@@ -38,7 +38,7 @@ class RegisterCustomerView(generics.GenericAPIView):
                 
                 response = {
                             'success': 'True',
-                            'message': 'User logged in successfully',
+                            'message': 'User registered successfully',
                             'user_email': user.email,
                             'customer_name': customer.name,
                             'customer_dob' : customer.dob,
@@ -49,7 +49,7 @@ class RegisterCustomerView(generics.GenericAPIView):
                 return Response(response,status=201)
         except Exception as e:
             print(traceback.format_exc())
-            return Response({'errorNeel': '{}'.format(e)},status=400)
+            return Response({'error: user not registered': '{}'.format(e)},status=400)
 
 
 class LoginCustomer(generics.GenericAPIView):
@@ -57,6 +57,7 @@ class LoginCustomer(generics.GenericAPIView):
         try:
             username = request.data.get("email",None)
             password = request.data.get("password",None)
+
             print(username)
             loginCheck = authenticate(username=username, password=password)
             print(loginCheck)
@@ -74,4 +75,4 @@ class LoginCustomer(generics.GenericAPIView):
                 return Response(response,status=201)
         except Exception as e:
             print(traceback.format_exc())
-            return Response({'error': '{}'.format(e)},status=400)
+            return Response({'error: login failed': '{}'.format(e)},status=400)
