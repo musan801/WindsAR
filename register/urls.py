@@ -1,8 +1,10 @@
 from django.urls import include,path
-from .views import RegisterCustomerView,LoginCustomer
+from .views import RegisterCustomerView,LoginCustomer,RegisterBusinessView,LoginBusiness
 
 
 urlpatterns = [
     path('register/', RegisterCustomerView.as_view(), name='create-customer'),
     path('login/', LoginCustomer.as_view(), name='login-Customer'),
+    path('loginBusiness/', LoginBusiness.as_view(), name='login-Business'),
+    path('registerBusiness/', RegisterBusinessView.as_view(), name='create-business')
 ]
