@@ -14,9 +14,12 @@ from django.core.mail import send_mail
 from rest_framework.permissions import AllowAny, NOT
 from .models import BusinessOwner
 from .serializers import CustomerSerializer
+from .serializers import fetchAuthDetails
 from rest_framework import status
 from rest_framework import viewsets
 from . import serializers
+import datetime
+import json
 
 class RegisterCustomerView(generics.GenericAPIView):
     @transaction.atomic
@@ -66,7 +69,7 @@ class LoginCustomer(generics.GenericAPIView):
             # id = request.data.get("id",None)
             
             loginCheck = authenticate(username=username, password=password)
-           
+            print(loginCheck.id)
             if loginCheck is None:
                 customer_email = User.objects.filter(username=username).first()
                 if customer_email is None:
@@ -74,16 +77,18 @@ class LoginCustomer(generics.GenericAPIView):
                 else:
                     return Response({"error":'Incorrect Password'})
             else:
-                # entireData = User.objects.filter(username=username)
-                # getData = CustomerSerializer(entireData,many=True)
+                # queryset = RegisterCustomer.objects.filter(user=loginCheck.id).last()
+                # getData = CustomerSerializer(queryset,many=False)
                 # cusID = getData.data
-                # print(cusID)
+                # print(cusID.get('name'))
                 
-                # allDetails = RegisterCustomer.objects.filter(id=)
-
                 response= {
                         'success': 'True',
                         'message':'User logged In successfully',
+                        # 'custome_name': cusID.get('name'),
+                        # 'customer_dob': cusID.get('dob'),
+                        # 'customer_id': cusID.get('id'),
+                        # 'customer_winCoins': cusID.get('winCoins'),
                     }
                 
                 return Response(response,status=201)
@@ -166,3 +171,46 @@ class LoginBusiness(generics.GenericAPIView):
             print(traceback.format_exc())
             return Response({'error': '{}'.format(e)},status=400)
 
+
+class CustomerProfile(generics.GenericAPIView):
+    def post(self,request):
+        try:
+            id = request.data.get('id',None)
+            queryset = RegisterCustomer.objects.filter(user=id).last()
+            getAllData = CustomerSerializer(queryset,many=False)
+            jsonData = getAllData.data
+            print(jsonData)
+
+            #convert dob from string datetime
+            dob = jsonData.get('dob')
+            updatedDOB = datetime.datetime.strptime(dob,'%Y-%M-%d').date()
+            
+            #calculate age from datetime
+            today = datetime.date.today()
+            age = today.year - updatedDOB.year - ((today.month, today.day) < (updatedDOB.month, updatedDOB.day))
+            print(age)
+            
+            querysetAuth = User.objects.filter(id=id).last()
+            getAllData2 = fetchAuthDetails(querysetAuth,many=False)
+            authUserdata = getAllData2.data
+            print("................................")
+            print(authUserdata)
+            
+            response ={
+                'name': jsonData.get('name'),
+                'age' : age,
+                'winCoins': jsonData.get('winCoins'),
+                'placeVisited' : jsonData.get('placesVisited'),
+                'email': authUserdata.get('email'),
+            }
+
+            return Response(response,status=201)
+            # username:request.data.get('email',None)
+            # queryset = RegisterCustomer.objects.filter(user=loginCheck.id).last()
+            # getData = CustomerSerializer(queryset,many=False)
+            # cusID = getData.data
+            # print(cusID.get('name'))
+
+        except Exception as e:
+            print(traceback.format_exc())
+            return Response({'error': '{}'.format(e)},status=400)
