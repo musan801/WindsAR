@@ -215,3 +215,67 @@ class CustomerProfile(generics.GenericAPIView):
         except Exception as e:
             print(traceback.format_exc())
             return Response({'error': '{}'.format(e)},status=400)
+
+
+class updateCoinsAndPlaces(generics.GenericAPIView):
+
+    def post(self,request):
+        try:
+            id = request.data.get('id',None)
+            winCoins = request.data.get('winCoins',None)
+            queryset = RegisterCustomer.objects.filter(user=id).last()
+            getAllData = CustomerSerializer(queryset,many=False)
+            jsonData = getAllData.data
+            print(jsonData)
+            name = jsonData.get('name')
+            id = jsonData.get('id')
+            dob = jsonData.get('dob')
+            placeVisited = jsonData.get('placesVisited')
+            vouchers = jsonData.get('vouchers')
+
+            user = jsonData.get('user')
+
+
+
+
+            placeWinCoins = jsonData.get('winCoins')
+
+            placeWinCoins = placeWinCoins + int(winCoins)
+
+
+
+            placeVisited = placeVisited + 1
+
+            
+
+            customerCoins = RegisterCustomer()
+
+
+
+            customerCoins.winCoins = placeWinCoins
+
+            customerCoins.name = name
+
+            customerCoins.dob = dob
+
+            customerCoins.placesVisited = placeVisited
+
+            customerCoins.vouchers = vouchers
+
+            customerCoins.save()
+
+
+
+            response={
+
+                'message': 'WinCoins Updated'
+
+            }
+
+            return Response(response,status=201)
+
+        except Exception as e:
+
+            print(traceback.format_exc())
+
+            return Response({'error': '{}'.format(e)},status=400)

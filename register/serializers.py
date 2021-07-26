@@ -13,3 +13,8 @@ class fetchAuthDetails(serializers.ModelSerializer):
         model= User
         fields = ['id','email','username']
 
+class updateCoins(serializers.ModelSerializer):
+
+    class Meta:
+
+        model: RegisterCustomer
