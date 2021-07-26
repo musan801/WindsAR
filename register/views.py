@@ -201,6 +201,7 @@ class CustomerProfile(generics.GenericAPIView):
                 'age' : age,
                 'winCoins': jsonData.get('winCoins'),
                 'placeVisited' : jsonData.get('placesVisited'),
+                'vouchers' : jsonData.get('voucher'),
                 'email': authUserdata.get('email'),
             }
 
