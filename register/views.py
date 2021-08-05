@@ -1,4 +1,5 @@
 from django.contrib.auth import models
+from django.db.models import manager
 from django.http import response
 from django.shortcuts import render
 from django.db import transaction
@@ -6,6 +7,7 @@ from django.db import transaction
 from django.contrib.auth.models import User
 # Create your views here.
 from .models import RegisterCustomer
+from django.db.models import F
 from rest_framework.response import Response
 from rest_framework import generics
 from django.contrib.auth import authenticate
@@ -14,11 +16,13 @@ from django.core.mail import send_mail
 from rest_framework.permissions import AllowAny, NOT
 from .models import BusinessOwner
 from .serializers import CustomerSerializer
+from .serializers import updateCoins
 from .serializers import fetchAuthDetails
 from rest_framework import status
 from rest_framework import viewsets
 from . import serializers
 import datetime
+from django.http import JsonResponse
 import json
 
 class RegisterCustomerView(generics.GenericAPIView):
@@ -72,22 +76,25 @@ class LoginCustomer(generics.GenericAPIView):
             print(loginCheck.id)
             if loginCheck is None:
                 customer_email = User.objects.filter(username=username).first()
+                
                 if customer_email is None:
                     return Response({"error":'User with this email and password is not found'})
                 else:
                     return Response({"error":'Incorrect Password'})
             else:
-                # queryset = RegisterCustomer.objects.filter(user=loginCheck.id).last()
-                # getData = CustomerSerializer(queryset,many=False)
-                # cusID = getData.data
-                # print(cusID.get('name'))
+                print("**************")
+                queryset = RegisterCustomer.objects.filter(user_id=loginCheck.id).last()
+                getData = CustomerSerializer(queryset,many=False)
+                cusID = getData.data
+                print(cusID.get('name'))
                 
                 response= {
                         'success': 'True',
                         'message':'User logged In successfully',
                         # 'custome_name': cusID.get('name'),
                         # 'customer_dob': cusID.get('dob'),
-                        # 'customer_id': cusID.get('id'),
+                        'customer_name': cusID.get('name'),
+                        'customer_id': loginCheck.id,
                         # 'customer_winCoins': cusID.get('winCoins'),
                     }
                 
@@ -217,65 +224,85 @@ class CustomerProfile(generics.GenericAPIView):
             return Response({'error': '{}'.format(e)},status=400)
 
 
-class updateCoinsAndPlaces(generics.GenericAPIView):
+# class updateCoinsAndPlaces(generics.GenericAPIView):
+    
+#     def retrieve(self,request,*args,**kwargs):
+#         try:
+            
+#             queryset = RegisterCustomer.objects.all()
+#             serializer_class = CustomerSerializer
 
-    def post(self,request):
-        try:
-            id = request.data.get('id',None)
-            winCoins = request.data.get('winCoins',None)
-            queryset = RegisterCustomer.objects.filter(user=id).last()
-            getAllData = CustomerSerializer(queryset,many=False)
-            jsonData = getAllData.data
-            print(jsonData)
-            name = jsonData.get('name')
-            id = jsonData.get('id')
-            dob = jsonData.get('dob')
-            placeVisited = jsonData.get('placesVisited')
-            vouchers = jsonData.get('vouchers')
-
-            user = jsonData.get('user')
+#             winCoins = request.data.get('winCoins',None)
+#             print(winCoins)
+#             instance = self.get_object()
+#             RegisterCustomer.objects.filter(pk=instance.id).update(winCoins = F('winCoins')+ winCoins)
+#             serializer = self.get_serializer(instance)
+#             return JsonResponse(serializer.data)
 
 
+#             # qs = RegisterCustomer.objects.filter(user =id).last()
+#             # print(qs)
+#             # serializer = CustomerSerializer(qs,data=winCoins,many=False)
+#             # serializer.is_valid(raise_exception=True)
+#             # # if serializer.is_valid:
+#             # serializer.save()
+            
+#             # return Response(serializer.data)
 
 
-            placeWinCoins = jsonData.get('winCoins')
 
-            placeWinCoins = placeWinCoins + int(winCoins)
+#             # queryset = RegisterCustomer.objects.filter(user=id).last()
+#             # getData = CustomerSerializer(queryset,many=False)
+#             # jsonData = getData.data
+            
+#             # print(jsonData)
+#             # print("*********************")
+#             # instance = self.get_object()
+#             # instance.winCoins = winCoins + jsonData.get('winCoins')
+#             # instance.save()
 
-
-
-            placeVisited = placeVisited + 1
-
+#             # serializer = self.get_serializer(instance)
+#             # serializer.is_valid(raise_exception=True)
+#             # self.perform_update(serializer)
             
 
-            customerCoins = RegisterCustomer()
+#             # print(serializer.data)
 
 
 
-            customerCoins.winCoins = placeWinCoins
-
-            customerCoins.name = name
-
-            customerCoins.dob = dob
-
-            customerCoins.placesVisited = placeVisited
-
-            customerCoins.vouchers = vouchers
-
-            customerCoins.save()
 
 
+#             # queryset = RegisterCustomer.objects.filter(user=id).last()
+#             # getAllData = CustomerSerializer(queryset,many=False)
+#             # jsonData = getAllData.data
 
-            response={
+#             # print(jsonData)
+#             # name = jsonData.get('name')
+#             # id = jsonData.get('id')
+#             # dob = jsonData.get('dob')
+#             # placeVisited = jsonData.get('placesVisited')
+#             # vouchers = jsonData.get('vouchers')
+#             # user = jsonData.get('user')
 
-                'message': 'WinCoins Updated'
 
-            }
+#             # placeWinCoins = jsonData.get('winCoins')
+#             # placeWinCoins = placeWinCoins + int(winCoins)
 
-            return Response(response,status=201)
+#             # placeVisited = placeVisited + 1
+            
+#             # customerCoins = RegisterCustomer()
 
-        except Exception as e:
+#             # customerCoins.winCoins = placeWinCoins
+#             # customerCoins.name = name
+#             # customerCoins.dob = dob
+#             # customerCoins.placesVisited = placeVisited
+#             # customerCoins.vouchers = vouchers
+#             # customerCoins.save()
 
-            print(traceback.format_exc())
-
-            return Response({'error': '{}'.format(e)},status=400)
+#             # response={
+#             #     'message': 'WinCoins Updated'
+#             # }
+#             # return Response(response,status=201)
+#         except Exception as e:
+#             print(traceback.format_exc())
+#             return Response({'error': '{}'.format(e)},status=400)

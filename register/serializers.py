@@ -3,6 +3,8 @@ from rest_framework import serializers
 from .models import RegisterCustomer
 from django.contrib.auth.models import User
 
+from register import models
+
 class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
         model = RegisterCustomer
@@ -14,7 +16,7 @@ class fetchAuthDetails(serializers.ModelSerializer):
         fields = ['id','email','username']
 
 class updateCoins(serializers.ModelSerializer):
-
     class Meta:
+        model= RegisterCustomer
+        fields = ['id','winCoins']
 
-        model: RegisterCustomer
