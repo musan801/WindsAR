@@ -1,4 +1,4 @@
-#!d:\project\windsar\venv\scripts\python.exe
+#!m:\wind\chintee\windsar\venv\scripts\python.exe
 # When the django-admin.py deprecation ends, remove this script.
 import warnings
 
