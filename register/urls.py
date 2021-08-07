@@ -1,6 +1,6 @@
 from django.urls import include,path
-from .views import RegisterCustomerView,LoginCustomer,RegisterBusinessView,LoginBusiness,CustomerProfile
-
+from .views import RegisterCustomerView,LoginCustomer,RegisterBusinessView,LoginBusiness,CustomerProfile,updateCoinsAndPlaces
+from .views import addVoucher
 
 urlpatterns = [
     path('register/', RegisterCustomerView.as_view(), name='create-customer'),
@@ -8,9 +8,8 @@ urlpatterns = [
     path('loginBusiness/', LoginBusiness.as_view(), name='login-Business'),
     path('registerBusiness/', RegisterBusinessView.as_view(), name='create-business'),
     path('customerProfile/',CustomerProfile.as_view(),name='customer-profile'),
+    path('updateCoins/',updateCoinsAndPlaces.as_view(),name='update-Coins'),
+    path('addVoucher/',addVoucher.as_view(),name='add-voucher'),
     
 ]
 
-
-    
-    

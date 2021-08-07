@@ -18,3 +18,12 @@ class BusinessOwner(models.Model):
     longitude = models.FloatField(default=0000)
     user = models.OneToOneField(User,null = True, on_delete=models.SET_NULL)
 
+class Voucher(models.Model):
+    businessName = models.CharField(max_length=50)
+    productName = models.CharField(max_length=50)
+    discountPrice = models.IntegerField()
+    expiryDate = models.DateField(max_length=10)
+    actualPrice = models.IntegerField()
+    winCoins = models.IntegerField()
+
+

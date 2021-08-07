@@ -7,6 +7,7 @@ from django.db import transaction
 from django.contrib.auth.models import User
 # Create your views here.
 from .models import RegisterCustomer
+from .models import Voucher
 from django.db.models import F
 from rest_framework.response import Response
 from rest_framework import generics
@@ -33,7 +34,7 @@ class RegisterCustomerView(generics.GenericAPIView):
             password = request.data.get("password")
             name = request.data.get("name")
             dob = request.data.get('dob')       
-            # dob format yyyy/mm/dd
+            # dob format yyyy-mm-dd
 
             user = User.objects.filter(email=email).last()
             if user != None:
@@ -213,96 +214,93 @@ class CustomerProfile(generics.GenericAPIView):
             }
 
             return Response(response,status=201)
-            # username:request.data.get('email',None)
-            # queryset = RegisterCustomer.objects.filter(user=loginCheck.id).last()
-            # getData = CustomerSerializer(queryset,many=False)
-            # cusID = getData.data
-            # print(cusID.get('name'))
 
         except Exception as e:
             print(traceback.format_exc())
             return Response({'error': '{}'.format(e)},status=400)
 
 
-# class updateCoinsAndPlaces(generics.GenericAPIView):
+class updateCoinsAndPlaces(generics.GenericAPIView):
+    def post(self,request):
+        try:
+            id = request.data.get('id',None)
+            winCoins = request.data.get('winCoins',None)
+            print(id)
+            queryset = RegisterCustomer.objects.filter(user_id=id).last()
+            queryset.winCoins += int(winCoins)
+            queryset.placesVisited += 1
+            queryset.save()
+
+            response = {
+                'success' : 'true',
+                'message' : 'Values updated'
+            }
+            return Response(response,status=201)
+        except Exception as e:
+            print(traceback.format_exc())
+            return Response({'error': '{}'.format(e)},status=400)
+
+
+class addVoucher(generics.GenericAPIView):
     
-#     def retrieve(self,request,*args,**kwargs):
+    def post(self,request):
+        try:
+            def CalcCoins(ActualPrice,DiscPrice):
+                #calc perent disc
+                Perc= ((ActualPrice-DiscPrice)/ActualPrice)*100
+                #cash disc
+                CashOff=ActualPrice-DiscPrice
+                perc = int(Perc)
+                cashOff = int(CashOff)
+                return int(perc*cashOff*4)
+
+            businessName = request.data.get('businessName',None)
+            productName = request.data.get('productName',None)
+            discountPrice = request.data.get('discountPrice',None)
+            expiryDate = request.data.get('expiryDate',None)
+            # date format yyyy-mm-dd
+
+            actualPrice = request.data.get('actualPrice',None)
+
+            winCoins = CalcCoins(int(actualPrice),int(discountPrice))
+            print(winCoins)
+
+            add = Voucher()
+            add.businessName = businessName
+            add.productName = productName
+            add.discountPrice = discountPrice
+            add.expiryDate = expiryDate
+            add.actualPrice = actualPrice
+            add.winCoins = winCoins
+            add.save()
+
+            response = {
+                'success' : 'true',
+                'message' : 'Voucher is added successfully',
+                'businessName' : add.businessName,
+                'productName' : add.productName,
+                'discountPrice' : add.discountPrice,
+                'expiryDate' : add.expiryDate,
+                'actualPrice' : add.actualPrice,
+                'winCoins' : add.winCoins
+            }
+            return Response(response,status=201)
+        except Exception as e:
+            print(traceback.format_exc())
+            return Response({'error': '{}'.format(e)},status=400)
+
+# class fetchVouchers(generics.GenericAPIView):
+#     def post(self,request):
 #         try:
-            
-#             queryset = RegisterCustomer.objects.all()
-#             serializer_class = CustomerSerializer
-
-#             winCoins = request.data.get('winCoins',None)
-#             print(winCoins)
-#             instance = self.get_object()
-#             RegisterCustomer.objects.filter(pk=instance.id).update(winCoins = F('winCoins')+ winCoins)
-#             serializer = self.get_serializer(instance)
-#             return JsonResponse(serializer.data)
+#             id = request.data.get('id',None)
+#             queryset = RegisterCustomer.objects.filter(user_id=id).last()
+#             getAllData = CustomerSerializer(queryset,many=False)
+#             jsonData = getAllData.data
+#             winCoins = json.get('winCoins')
 
 
-#             # qs = RegisterCustomer.objects.filter(user =id).last()
-#             # print(qs)
-#             # serializer = CustomerSerializer(qs,data=winCoins,many=False)
-#             # serializer.is_valid(raise_exception=True)
-#             # # if serializer.is_valid:
-#             # serializer.save()
-            
-#             # return Response(serializer.data)
-
-
-
-#             # queryset = RegisterCustomer.objects.filter(user=id).last()
-#             # getData = CustomerSerializer(queryset,many=False)
-#             # jsonData = getData.data
-            
-#             # print(jsonData)
-#             # print("*********************")
-#             # instance = self.get_object()
-#             # instance.winCoins = winCoins + jsonData.get('winCoins')
-#             # instance.save()
-
-#             # serializer = self.get_serializer(instance)
-#             # serializer.is_valid(raise_exception=True)
-#             # self.perform_update(serializer)
-            
-
-#             # print(serializer.data)
-
-
-
-
-
-#             # queryset = RegisterCustomer.objects.filter(user=id).last()
-#             # getAllData = CustomerSerializer(queryset,many=False)
-#             # jsonData = getAllData.data
-
-#             # print(jsonData)
-#             # name = jsonData.get('name')
-#             # id = jsonData.get('id')
-#             # dob = jsonData.get('dob')
-#             # placeVisited = jsonData.get('placesVisited')
-#             # vouchers = jsonData.get('vouchers')
-#             # user = jsonData.get('user')
-
-
-#             # placeWinCoins = jsonData.get('winCoins')
-#             # placeWinCoins = placeWinCoins + int(winCoins)
-
-#             # placeVisited = placeVisited + 1
-            
-#             # customerCoins = RegisterCustomer()
-
-#             # customerCoins.winCoins = placeWinCoins
-#             # customerCoins.name = name
-#             # customerCoins.dob = dob
-#             # customerCoins.placesVisited = placeVisited
-#             # customerCoins.vouchers = vouchers
-#             # customerCoins.save()
-
-#             # response={
-#             #     'message': 'WinCoins Updated'
-#             # }
-#             # return Response(response,status=201)
+#             return Response('aaa',status=201)
 #         except Exception as e:
 #             print(traceback.format_exc())
 #             return Response({'error': '{}'.format(e)},status=400)
+
