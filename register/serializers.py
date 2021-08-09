@@ -1,8 +1,7 @@
 from django.db.models import fields
 from rest_framework import serializers
-from .models import RegisterCustomer
+from .models import RegisterCustomer,BusinessOwner,Voucher,MarkerLocations
 from django.contrib.auth.models import User
-
 from register import models
 
 class CustomerSerializer(serializers.ModelSerializer):
@@ -20,3 +19,17 @@ class updateCoins(serializers.ModelSerializer):
         model= RegisterCustomer
         fields = ['id','winCoins']
 
+class BusinessOwnerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BusinessOwner
+        fields = '__all__'
+
+class fetchVouchersSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Voucher
+        fields = '__all__'
+
+class fetchAllLocationSerializers(serializers.ModelSerializer):
+    class Meta:
+        model = MarkerLocations
+        fields = '__all__'

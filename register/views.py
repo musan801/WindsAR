@@ -6,7 +6,7 @@ from django.db import transaction
 
 from django.contrib.auth.models import User
 # Create your views here.
-from .models import RegisterCustomer
+from .models import RegisterCustomer,MarkerLocations
 from .models import Voucher
 from django.db.models import F
 from rest_framework.response import Response
@@ -15,8 +15,8 @@ from django.contrib.auth import authenticate
 import traceback
 from django.core.mail import send_mail
 from rest_framework.permissions import AllowAny, NOT
-from .models import BusinessOwner
-from .serializers import CustomerSerializer
+from .models import BusinessOwner,MarkerLocations
+from .serializers import CustomerSerializer, fetchVouchersSerializer
 from .serializers import updateCoins
 from .serializers import fetchAuthDetails
 from rest_framework import status
@@ -24,6 +24,7 @@ from rest_framework import viewsets
 from . import serializers
 import datetime
 from django.http import JsonResponse
+from .serializers import BusinessOwnerSerializer, fetchAllLocationSerializers
 import json
 
 class RegisterCustomerView(generics.GenericAPIView):
@@ -88,7 +89,7 @@ class LoginCustomer(generics.GenericAPIView):
                 getData = CustomerSerializer(queryset,many=False)
                 cusID = getData.data
                 print(cusID.get('name'))
-                
+
                 response= {
                         'success': 'True',
                         'message':'User logged In successfully',
@@ -109,7 +110,7 @@ class RegisterBusinessView(generics.GenericAPIView):
     @transaction.atomic
     def post(self,request):
         try:
-            email = username = request.data.get("email").strip()
+            email = username = request.data.get("email")
             password = request.data.get("password")
             name = request.data.get("name")
             category = request.data.get("category")
@@ -170,9 +171,18 @@ class LoginBusiness(generics.GenericAPIView):
                 else:
                     return Response({"error":'Incorrect Password'})
             else:
+                queryset = BusinessOwner.objects.filter(user_id=loginCheck.id).last()
+                getData = BusinessOwnerSerializer(queryset,many=False)
+                cusID = getData.data
+                print(cusID)
+                print(cusID.get('name'))
+                print(cusID.get('user'))
+
                 response= {
                         'success': 'True',
                         'message':'User logged In successfully',
+                        'user_id' : cusID.get('user'),
+                        'BusinessName' : cusID.get('name'),
                     }
                 return Response(response,status=201)
         except Exception as e:
@@ -205,6 +215,7 @@ class CustomerProfile(generics.GenericAPIView):
             print(authUserdata)
             
             response ={
+                'success' : 'true',
                 'name': jsonData.get('name'),
                 'age' : age,
                 'winCoins': jsonData.get('winCoins'),
@@ -259,7 +270,7 @@ class addVoucher(generics.GenericAPIView):
             discountPrice = request.data.get('discountPrice',None)
             expiryDate = request.data.get('expiryDate',None)
             # date format yyyy-mm-dd
-
+            
             actualPrice = request.data.get('actualPrice',None)
 
             winCoins = CalcCoins(int(actualPrice),int(discountPrice))
@@ -289,18 +300,109 @@ class addVoucher(generics.GenericAPIView):
             print(traceback.format_exc())
             return Response({'error': '{}'.format(e)},status=400)
 
-# class fetchVouchers(generics.GenericAPIView):
-#     def post(self,request):
-#         try:
-#             id = request.data.get('id',None)
-#             queryset = RegisterCustomer.objects.filter(user_id=id).last()
-#             getAllData = CustomerSerializer(queryset,many=False)
-#             jsonData = getAllData.data
-#             winCoins = json.get('winCoins')
+
+class fetchAllVouchersCustomer(generics.GenericAPIView):
+    def post(self,request):
+        try:
+            id = request.data.get('id',None)
+            queryset = Voucher.objects.all()
+            getAllData = fetchVouchersSerializer(queryset,many=True)
+            jsonData = getAllData.data
+            # winCoins = json.get('winCoins')
+            
+            queryset2 = RegisterCustomer.objects.filter(user_id=id).last()
+            getData = CustomerSerializer(queryset2,many=False)
+            jsonData2 = getData.data
+
+            winCoins = jsonData2.get('winCoins')
+            
+            return Response(json.dumps(jsonData),status=201)
+        except Exception as e:
+            print(traceback.format_exc())
+            return Response({'error': '{}'.format(e)},status=400)
+
+class addMarkerLocation(generics.GenericAPIView):
+    def post(self,request):
+        try:
+            locationName = request.data.get('locationName',None)
+            locationLatitude = request.data.get('locationLatitude',None)
+            locationLongitude = request.data.get('locationLongitude',None)
+            description = request.data.get('description',None)
+            print(locationName)
+
+            addMarker = MarkerLocations()
+            addMarker.locationName = locationName
+            addMarker.locationLatitude = locationLatitude
+            addMarker.locationLongitude = locationLongitude
+            addMarker.description = description
+            addMarker.save()
+            
+            response={
+                'success':'true',
+                'message':'successfully',
+                'locationName' : locationName,
+                'locationLatitude' : locationLatitude,
+                'locationLongitude' : locationLongitude,
+                'description' : description
+            }
+            return Response(response,status=201)
+        except Exception as e:
+            print(traceback.format_exc())
+            return Response({'error':'{}'.format(e)},status=400)
+
+class fetchMarkerLocation(generics.GenericAPIView):
+    def post(self,request):
+        try:
+            queryset = MarkerLocations.objects.all()
+            getAllData = fetchAllLocationSerializers(queryset,many=True)
+            jsonData = getAllData.data
+            
+            return Response(json.dumps(jsonData),status=201)
+        except Exception as e :
+            print(traceback.format_exc())
+            return Response({'error':'{}'.format(e)},status=400)
+
+class userEditProfile(generics.GenericAPIView):
+    def post(self,request):
+        try:
+            id = request.data.get('id',None)
+            email = request.data.get('email',None)
+            name = request.data.get('name',None)
+
+            queryset = RegisterCustomer.objects.filter(user_id=id).last()
+            queryset.name = name
+            queryset.user.email = email
+            queryset.save()
+            
+            response = {
+                'success' : 'True',
+                'message':'Successfully edited Customer profile'
+            }
+            return Response(response,status=201)
+        except Exception as e:
+            print(traceback.format_exc())
+            return Response({'error':'{}'.format(e)},status=400)
+
+class businessEditProfile(generics.GenericAPIView):
+    def post(self,request):
+        try:
+            id = request.data.get('id',None)
+            name = request.data.get('name',None)
+            email = request.data.get('email',None)
+
+            queryset = BusinessOwner.objects.filter(user_id=id).last()
+            queryset.name = name
+            queryset.email = email
+            queryset.save()
+
+            response = {
+                'success' : 'True',
+                'message':'Successfully edited Customer profile'
+            }
+            return Response(response,status=201)
+        except Exception as e:
+            print(traceback.format_exc())
+            return Response({'error':'{}'.format(e)},status=400)
 
 
-#             return Response('aaa',status=201)
-#         except Exception as e:
-#             print(traceback.format_exc())
-#             return Response({'error': '{}'.format(e)},status=400)
 
