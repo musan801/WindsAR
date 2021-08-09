@@ -31,6 +31,7 @@ class MarkerLocations(models.Model):
     locationLatitude = models.FloatField(default=0000)
     locationLongitude = models.FloatField(default=0000)
     description = models.CharField(max_length=500)
+    imagelink= models.CharField(max_length=500)
 
 
 

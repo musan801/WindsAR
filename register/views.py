@@ -328,6 +328,7 @@ class addMarkerLocation(generics.GenericAPIView):
             locationLatitude = request.data.get('locationLatitude',None)
             locationLongitude = request.data.get('locationLongitude',None)
             description = request.data.get('description',None)
+            imagelink = request.data.get('imagelink',None)
             print(locationName)
 
             addMarker = MarkerLocations()
@@ -335,6 +336,7 @@ class addMarkerLocation(generics.GenericAPIView):
             addMarker.locationLatitude = locationLatitude
             addMarker.locationLongitude = locationLongitude
             addMarker.description = description
+            addMarker.imagelink = imagelink
             addMarker.save()
             
             response={
@@ -343,7 +345,9 @@ class addMarkerLocation(generics.GenericAPIView):
                 'locationName' : locationName,
                 'locationLatitude' : locationLatitude,
                 'locationLongitude' : locationLongitude,
-                'description' : description
+                'description' : description,
+                'imagelink' : imagelink
+                
             }
             return Response(response,status=201)
         except Exception as e:
@@ -356,7 +360,7 @@ class fetchMarkerLocation(generics.GenericAPIView):
             queryset = MarkerLocations.objects.all()
             getAllData = fetchAllLocationSerializers(queryset,many=True)
             jsonData = getAllData.data
-            
+                
             return Response(json.dumps(jsonData),status=201)
         except Exception as e :
             print(traceback.format_exc())
