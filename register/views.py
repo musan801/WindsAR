@@ -246,20 +246,10 @@ class updateCoinsAndPlaces(generics.GenericAPIView):
             queryset.placesVisited += 1
             queryset.save()
 
-            placeName = request.data.get('placeName',None)
-            locationLatitude = request.data.get('locationLatitude',None)
-            locationLongitude = request.data.get('locationLongitude',None)
-            
-            addHistory = PlacesHistory()
-            addHistory.placeName = placeName
-            addHistory.locationLatitude = locationLatitude
-            addHistory.locationLongitude = locationLongitude
-            addHistory.registerCustomer_id = id
-            addHistory.save()
-
             response = {
                 'success' : 'true',
                 'message' : 'Values updated'
+
             }
             return Response(response,status=201)
         except Exception as e:
@@ -371,8 +361,8 @@ class addMarkerLocation(generics.GenericAPIView):
             addMarker.Long = Long
             addMarker.description = description
             addMarker.address = address
-            addMarker.imagelink=imagelink
             addMarker.winCoins = winCoins
+            addMarker.imagelink = imagelink
             addMarker.save()
             
             response={
@@ -384,7 +374,7 @@ class addMarkerLocation(generics.GenericAPIView):
                 'description' : description,
                 'address' : address,
                 'winCoins' : winCoins,
-                'imagelink' : imagelink,
+                'imagelink' : imagelink
             }
             return Response(response,status=201)
         except Exception as e:
