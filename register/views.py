@@ -359,6 +359,7 @@ class addMarkerLocation(generics.GenericAPIView):
             Long = request.data.get('Long',None)
             description = request.data.get('description',None)
             review = request.data.get('review',None)
+            imagelink = request.data.get('imagelink',None)
             rating = request.data.get('rating',None)
             address = request.data.get('address',None)
 
@@ -370,6 +371,7 @@ class addMarkerLocation(generics.GenericAPIView):
             addMarker.Long = Long
             addMarker.description = description
             addMarker.address = address
+            addMarker.imagelink=imagelink
             addMarker.winCoins = winCoins
             addMarker.save()
             
@@ -382,6 +384,7 @@ class addMarkerLocation(generics.GenericAPIView):
                 'description' : description,
                 'address' : address,
                 'winCoins' : winCoins,
+                'imagelink' : imagelink,
             }
             return Response(response,status=201)
         except Exception as e:
