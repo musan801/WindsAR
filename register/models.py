@@ -27,11 +27,13 @@ class Voucher(models.Model):
     winCoins = models.IntegerField()
 
 class MarkerLocations(models.Model):
-    locationName = models.CharField(max_length=50)
-    locationLatitude = models.FloatField(default=0000)
-    locationLongitude = models.FloatField(default=0000)
+    name = models.CharField(max_length=50)
+    Lat = models.FloatField(default=0000)
+    Long = models.FloatField(default=0000)
     description = models.CharField(max_length=500)
-    imagelink= models.CharField(max_length=500)
-
+    imagelink = models.CharField(max_length=600,default="image")
+    address = models.CharField(max_length=500,default="Windsor,Canada")
+    winCoins = models.IntegerField(default=0)
+    
 
 

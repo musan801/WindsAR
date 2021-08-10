@@ -1,6 +1,7 @@
 from django.urls import include,path
 from .views import RegisterCustomerView,LoginCustomer,RegisterBusinessView,LoginBusiness,CustomerProfile,updateCoinsAndPlaces
 from .views import addVoucher,fetchAllVouchersCustomer,addMarkerLocation,fetchMarkerLocation,userEditProfile,businessEditProfile
+from .views import redeemVoucher
 
 urlpatterns = [
     path('register/', RegisterCustomerView.as_view(), name='create-customer'),
@@ -15,6 +16,7 @@ urlpatterns = [
     path('fetchMarkerLocation/',fetchMarkerLocation.as_view(),name='fetch-MarkerLocation'),
     path('userEditProfile/',userEditProfile.as_view(),name='user-EditProfile'),
     path('businessEditProfile/',businessEditProfile.as_view(),name='business-EditProfile'),
-
+    path('redeemVoucher/',redeemVoucher.as_view(),name='redeem-voucher'),
+    
 ]
 

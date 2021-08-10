@@ -4,10 +4,12 @@ from .models import RegisterCustomer,BusinessOwner,Voucher,MarkerLocations
 from django.contrib.auth.models import User
 from register import models
 
+
+
 class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
         model = RegisterCustomer
-        fields = '__all__'
+        fields = ['name','dob','winCoins','placesVisited','vouchers','user']
 
 class fetchAuthDetails(serializers.ModelSerializer):
     class Meta:
@@ -33,3 +35,6 @@ class fetchAllLocationSerializers(serializers.ModelSerializer):
     class Meta:
         model = MarkerLocations
         fields = '__all__'
+
+
+

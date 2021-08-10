@@ -23,9 +23,11 @@ from rest_framework import status
 from rest_framework import viewsets
 from . import serializers
 import datetime
+import math
 from django.http import JsonResponse
 from .serializers import BusinessOwnerSerializer, fetchAllLocationSerializers
 import json
+from rest_framework.views import APIView
 
 class RegisterCustomerView(generics.GenericAPIView):
     @transaction.atomic
@@ -89,7 +91,8 @@ class LoginCustomer(generics.GenericAPIView):
                 getData = CustomerSerializer(queryset,many=False)
                 cusID = getData.data
                 print(cusID.get('name'))
-
+                print("***********************")
+                print(cusID)
                 response= {
                         'success': 'True',
                         'message':'User logged In successfully',
@@ -235,12 +238,24 @@ class updateCoinsAndPlaces(generics.GenericAPIView):
     def post(self,request):
         try:
             id = request.data.get('id',None)
+            user_id = request.data.get('user_id',None)
             winCoins = request.data.get('winCoins',None)
             print(id)
-            queryset = RegisterCustomer.objects.filter(user_id=id).last()
+            queryset = RegisterCustomer.objects.filter(user_id=user_id).last()
             queryset.winCoins += int(winCoins)
             queryset.placesVisited += 1
             queryset.save()
+
+            placeName = request.data.get('placeName',None)
+            locationLatitude = request.data.get('locationLatitude',None)
+            locationLongitude = request.data.get('locationLongitude',None)
+            
+            addHistory = PlacesHistory()
+            addHistory.placeName = placeName
+            addHistory.locationLatitude = locationLatitude
+            addHistory.locationLongitude = locationLongitude
+            addHistory.registerCustomer_id = id
+            addHistory.save()
 
             response = {
                 'success' : 'true',
@@ -304,12 +319,12 @@ class addVoucher(generics.GenericAPIView):
 class fetchAllVouchersCustomer(generics.GenericAPIView):
     def post(self,request):
         try:
-            id = request.data.get('id',None)
             queryset = Voucher.objects.all()
             getAllData = fetchVouchersSerializer(queryset,many=True)
             jsonData = getAllData.data
             # winCoins = json.get('winCoins')
             
+            id = request.data.get('id',None)
             queryset2 = RegisterCustomer.objects.filter(user_id=id).last()
             getData = CustomerSerializer(queryset2,many=False)
             jsonData2 = getData.data
@@ -324,30 +339,49 @@ class fetchAllVouchersCustomer(generics.GenericAPIView):
 class addMarkerLocation(generics.GenericAPIView):
     def post(self,request):
         try:
-            locationName = request.data.get('locationName',None)
-            locationLatitude = request.data.get('locationLatitude',None)
-            locationLongitude = request.data.get('locationLongitude',None)
-            description = request.data.get('description',None)
-            imagelink = request.data.get('imagelink',None)
-            print(locationName)
+            def CalcCoinsTour(Rating,Review):
+                Rating = float(Rating)
+                Review = int(Review)
+                print(Rating)
+                print(Review)
+                Total = (Rating*Review/Review+Rating*2)+(Review/2) + (Rating*1000)+200
+                if Review >100:
 
+                    Total= Total/30
+                else:
+                    Total/= 50
+                    Total=50 *round(Total/50)
+                    
+                return math.ceil(Total)
+
+            name = request.data.get('name',None)
+            Lat = request.data.get('Lat',None)
+            Long = request.data.get('Long',None)
+            description = request.data.get('description',None)
+            review = request.data.get('review',None)
+            rating = request.data.get('rating',None)
+            address = request.data.get('address',None)
+
+            winCoins = CalcCoinsTour(float(rating),float(review))
+            
             addMarker = MarkerLocations()
-            addMarker.locationName = locationName
-            addMarker.locationLatitude = locationLatitude
-            addMarker.locationLongitude = locationLongitude
+            addMarker.name = name
+            addMarker.Lat = Lat
+            addMarker.Long = Long
             addMarker.description = description
-            addMarker.imagelink = imagelink
+            addMarker.address = address
+            addMarker.winCoins = winCoins
             addMarker.save()
             
             response={
                 'success':'true',
                 'message':'successfully',
-                'locationName' : locationName,
-                'locationLatitude' : locationLatitude,
-                'locationLongitude' : locationLongitude,
+                'name' : name,
+                'Lat' : Lat,
+                'Long' : Long,
                 'description' : description,
-                'imagelink' : imagelink
-                
+                'address' : address,
+                'winCoins' : winCoins,
             }
             return Response(response,status=201)
         except Exception as e:
@@ -360,8 +394,8 @@ class fetchMarkerLocation(generics.GenericAPIView):
             queryset = MarkerLocations.objects.all()
             getAllData = fetchAllLocationSerializers(queryset,many=True)
             jsonData = getAllData.data
-                
-            return Response(json.dumps(jsonData),status=201)
+            
+            return Response(getAllData.data,status=201)
         except Exception as e :
             print(traceback.format_exc())
             return Response({'error':'{}'.format(e)},status=400)
@@ -408,5 +442,35 @@ class businessEditProfile(generics.GenericAPIView):
             print(traceback.format_exc())
             return Response({'error':'{}'.format(e)},status=400)
 
+class deleteVoucher(APIView):
+    
+    def delete(self,request):
+            try:
+                id = request.data.get('id',None)
+                queryset = Voucher.objects.filter(user_id = id)
+                queryset.delete()
+                return Response('Voucher Deleted')
+            except ObjectDoesNotExist:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+
+class redeemVoucher(generics.GenericAPIView):
+    def post(self,request):
+        try:
+            user_id = request.data.get('user_id',None)
+            voucherWinCoins = request.data.get('winCoins',None)
+
+            queryset = RegisterCustomer.objects.filter(user_id=user_id).last()
+            queryset.winCoins -= int(voucherWinCoins)
+            queryset.save()
+
+            response = {
+                'success' : 'True',
+                'message' : 'successfully done',
+                'winCoins' : queryset.winCoins
+            }
+            return Response(response,status=201)
+        except Exception as e:
+            print(traceback.format_exc())
+            return Response({'error':'{}'.format(e)},status=400)
 
 
